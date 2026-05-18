@@ -4,18 +4,28 @@ import joblib
 import os
 import faiss
 from sentence_transformers import SentenceTransformer
+from transformers import pipeline
 
 # --- Configuration ---
 st.set_page_config(page_title="Class 8 Science AI Tutor", page_icon="📘", layout="centered")
 
-# --- Load AI Model ---
+# --- Load Generator ---
+@st.cache_resource
+def load_generator():
+    """Load the Text generation model"""
+    try:
+        # Using distilgpt2 as it's small and fast
+        return pipeline("text-generation", model="distilgpt2")
+    except Exception as e:
+        st.error(f"❌ Failed to load generator model: {e}")
+        return None
 
+# --- Load AI Model ---
 @st.cache_resource
 def load_ai_tutor_model():
     """Load the AI Tutor model from joblib file, handling CPU-only loading"""
     try:
         if os.path.exists('tutor_model.joblib'):
-           
             tutor_components = joblib.load('tutor_model.joblib')
             st.success("✅ AI Tutor model loaded successfully!")
             return tutor_components
@@ -24,31 +34,11 @@ def load_ai_tutor_model():
             return None
     except Exception as e:
         error_msg = str(e)
-       
-        if "Attempting to deserialize object on a CUDA device" in error_msg and torch.cuda.is_available() == False:
-            st.warning("⚠️ Detected CUDA/CPU compatibility issue during loading.")
-            try:
-                
-                import pickle
-                with open('tutor_model.joblib', 'rb') as f:
-                    
-                    data = joblib.load(f)
-                
-                st.success("✅ AI Tutor model loaded successfully (attempt 2)!")
-                return data
-            except Exception as e2:
-                st.error(f"❌ Failed to load AI Tutor model (attempt 2 also failed): {e2}")
-       
         st.error(f"❌ Failed to load AI Tutor model: {error_msg}")
-        if "Attempting to deserialize object on a CUDA device" in error_msg:
-            st.info("💡 This is a CUDA/CPU compatibility issue. The model was likely saved on a GPU machine. "
-                    "Standard reloading failed. You might need to modify how the model is saved in the notebook.")
-        else:
-            st.info("💡 An unexpected error occurred while loading the model.")
         return None
 
 tutor_model = load_ai_tutor_model()
-
+generator = load_generator()
 
 def get_answer(question, model_data):
     """Get answer using the loaded RAG model."""
@@ -79,27 +69,32 @@ def get_answer(question, model_data):
                     'score': float(scores[0][i])
                 })
 
-        # 4. Combine context 
+        # 4. Generate answer
         if relevant_chunks:
-            
             context_parts = [chunk['content'] for chunk in relevant_chunks]
             combined_context = " ".join(context_parts)
-            
-           
-            answer = f"Based on the textbook content:\n\n{combined_context[:500]}..." 
-            
-            
-            
+
+            if generator:
+                prompt = f"Context: {combined_context}\n\nQuestion: {question}\n\nAnswer:"
+                generated = generator(prompt, max_new_tokens=150, truncation=True, num_return_sequences=1, repetition_penalty=2.0)
+                full_text = generated[0]['generated_text']
+                # Try to extract the answer part
+                if "Answer:" in full_text:
+                    answer = full_text.split("Answer:")[-1].strip()
+                else:
+                    answer = full_text
+            else:
+                answer = f"Based on the textbook content:\n\n{combined_context[:500]}..."
         else:
             answer = "I couldn't find relevant information in the textbook."
-        
+
         return answer, relevant_chunks
 
     except Exception as e:
         return f"An error occurred during processing: {e}", []
 
 # --- UI ---
-st.title("📘 Class 8 Science AI Tutor")
+st.title("📘 Class 8 Science AI Tutor (v1.2)")
 st.caption("Ask questions about your NCERT Class 8 Science textbook.")
 
 # Status
@@ -130,7 +125,6 @@ if st.button("Get Answer", type="primary", use_container_width=True):
                     """)
     else:
         st.info("This is a demo. In the full version, your question would be answered using the AI model.")
-
 
 st.markdown("---")
 st.caption("Powered by Retrieval-Augmented Generation (RAG) and NCERT Curriculum.")

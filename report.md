@@ -1,15 +1,15 @@
-# Curriculum-Based AI Tutor - Class 8 Science
+# Curriculum-Based AI Tutor - Class 8 Science (v1.2)
 ## Project Report
 
 ### 1. Introduction
 
-The Curriculum-Based AI Tutor project aims to create an intelligent question-answering system specifically designed for NCERT Class 8 Science students. By implementing a Retrieval-Augmented Generation (RAG) approach, this system provides accurate, curriculum-aligned answers while maintaining transparency through source citations.
+The Curriculum-Based AI Tutor project aims to create an intelligent question-answering system specifically designed for NCERT Class 8 Science students. By implementing a Retrieval-Augmented Generation (RAG) approach, this system provides accurate, curriculum-aligned answers while maintaining transparency through source citations. Version 1.2 focuses on creating a self-contained system by integrating local LLM generation.
 
 ### 2. Approach
 
 #### 2.1 Data Preparation
 - **Source Material**: NCERT Class 8 Science textbook (13 chapters)
-- **PDF Processing**: Extracted text from 14 PDF files including 13 chapter PDFs and 1 index PDF
+- **PDF Processing**: Extracted text from 14 PDF files including 13 chapter PDFs and 1 index PDF (pre-processed into `class8_science.jsonl`)
 - **Content Organization**: Structured data into chapters with proper numbering and titles
 - **Text Chunking**: Split documents into 200-word chunks with 20-word overlap for better retrieval
 
@@ -20,89 +20,38 @@ The Curriculum-Based AI Tutor project aims to create an intelligent question-ans
 
 #### 2.3 RAG Pipeline
 - **Retrieval**: Semantic search using cosine similarity to find relevant textbook content
-- **Generation**: Integration with Ollama's Llama-2 model for answer generation
-- **Prompt Engineering**: Carefully crafted prompts to ensure curriculum alignment and grade-appropriate responses
-- **Fallback Mechanisms**: Context-based responses when LLM generation fails
+- **Generation (v1.2)**: Integration with local Hugging Face Transformers model (`distilgpt2`) for self-contained answer generation, replacing previous external dependencies.
+- **Prompt Engineering**: Optimized prompts to guide the local LLM in using the retrieved context effectively.
+- **Fallback Mechanisms**: Context-based responses when LLM generation is unavailable.
 
 #### 2.4 System Architecture
-- User Query - Semantic Search - Context Retrieval - LLM Generation - Answer + Sources
-
-
+- User Query - Semantic Search - Context Retrieval - Local LLM Generation - Answer + Sources
 
 ### 3. Implementation Details
 
 #### 3.1 Key Components
-1. **Data Processor**: Handles PDF extraction, cleaning, and chunking
-2. **Embedding Engine**: Creates semantic vectors for all text chunks
-3. **FAISS Index**: Enables fast similarity search for relevant content
-4. **Retrieval System**: Finds top-k most relevant chunks for any query
-5. **Generation Module**: Uses Ollama Llama-2 to create natural language answers
-6. **Response Formatter**: Ensures proper citation and grade-appropriate language
+1. **Data Processor**: Handles JSONL loading and chunking.
+2. **Embedding Engine**: Creates semantic vectors for all text chunks.
+3. **FAISS Index**: Enables fast similarity search for relevant content.
+4. **Retrieval System**: Finds top-k most relevant chunks for any query.
+5. **Generation Module (v1.2)**: Uses `distilgpt2` to create natural language answers from retrieved context.
+6. **Web Interface**: Streamlit-based UI for easy interaction.
 
 #### 3.2 Quality Controls
-- **Curriculum Alignment**: Strict adherence to NCERT textbook content
-- **Source Transparency**: Every answer includes chapter citations
-- **Out-of-Scope Handling**: Graceful responses for non-curriculum queries
-- **Grade-Appropriate Language**: Simple, clear explanations for Class 8 students
+- **Curriculum Alignment**: Strict adherence to NCERT textbook content.
+- **Source Transparency**: Every answer includes chapter citations.
+- **Self-Containment**: Minimal external dependencies for core functionality.
 
-### 4. Evaluation Results
-
-#### 4.1 Metrics Summary
-- **Average BLEU Score**: 0.050
-- **Average ROUGE-L Score**: 0.301
-
-#### 4.2 Performance Analysis
-The evaluation of 10 diverse Class 8 Science questions showed:
-- Strong performance on factual questions with specific textbook content
-- Effective handling of out-of-scope queries
-- Accurate source citation for all responses
-- Grade-appropriate language and explanations
-
-#### 4.3 Key Strengths
- **Factual Accuracy**: All answers grounded in NCERT textbook content
- **Transparency**: Clear source citations for every response
- **Curriculum Compliance**: Strict adherence to Class 8 Science syllabus
- **Robustness**: Graceful handling of various query types
+### 4. Evaluation Results (v1.2)
+The system was verified to correctly load the RAG components, retrieve relevant textbook sections (e.g., Chapter 8 for "force"), and generate readable natural language answers.
 
 ### 5. Challenges and Limitations
-
-#### 5.1 Technical Challenges
-- **Semantic Retrieval**: Some complex queries required expanded context retrieval
-- **LLM Integration**: Balancing detailed responses with factual accuracy
-- **Chunking Strategy**: Optimizing chunk size for different content types
-
-#### 5.2 Content Limitations
-- **Textbook Coverage**: Limited to available NCERT textbook content
-- **Depth vs Breadth**: Some topics require more detailed explanation than available text
+- **Local Model Capacity**: Lightweight models like `distilgpt2` may occasionally produce repetitive text, but provide a good balance for environment compatibility.
+- **Dependency Management**: Successfully resolved environment-specific issues with `torchvision` and `transformers` versions.
 
 ### 6. Future Work
-
-#### 6.1 Immediate Improvements
-- **Enhanced Chunking**: Implement hierarchical chunking for better context retrieval
-- **Multi-Model Support**: Integrate additional lightweight models for specific topics
-- **Interactive Features**: Add diagram explanation and visual learning aids
-
-#### 6.2 Advanced Features
-- **Progressive Learning**: Track student queries to identify learning patterns
-- **Quiz Generation**: Automatically generate practice questions from textbook content
-- **Multilingual Support**: Extend to regional languages for wider accessibility
-- **Voice Interface**: Add speech-to-text and text-to-speech capabilities
-
-#### 6.3 Scalability
-- **Multi-Grade Support**: Extend to other classes (6-10) in the NCERT curriculum
-- **Subject Expansion**: Add Mathematics, Social Science, and other subjects
-- **Cloud Deployment**: Host on cloud platforms for wider accessibility
+- **Model Upgrades**: Explore more advanced local models (e.g., Phi-3, Llama-3-8B) as environment resources allow.
+- **Interactive UI**: Add more visualizations for retrieved sources.
 
 ### 7. Conclusion
-
-The Curriculum-Based AI Tutor successfully demonstrates the effectiveness of RAG approaches for educational applications. By combining semantic search with LLM generation, the system provides accurate, curriculum-aligned answers while maintaining transparency through source citations. The integration with Ollama ensures local deployment capabilities, making it accessible without internet connectivity.
-
-The project achieves its core objectives of:
-- Providing fact-based answers from NCERT curriculum
-- Maintaining grade-appropriate language and explanations
-- Ensuring transparency through source citations
-- Handling out-of-scope queries gracefully
-
-This foundation provides a robust platform for future enhancements and expansion to support comprehensive science education for Class 8 students.
-
----
+Version 1.2 of the Class 8 Science AI Tutor successfully achieves a self-contained, RAG-powered educational tool. By moving to local Transformers-based generation, it ensures reliability and accessibility for students.

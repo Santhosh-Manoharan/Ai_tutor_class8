@@ -1,0 +1,11 @@
+streamlit
+joblib
+faiss-cpu
+sentence-transformers
+pandas
+nltk
+rouge
+transformers
+torch
+torchvision
+playwright
